@@ -9,7 +9,7 @@ tasks running in ECS Fargate with eni type network attachments.
 ```
 module "cloudmap_sync_lambda" {
   source   = "StratusGrid/lambda-event-handler-service-discovery-sync/aws"
-  version  = "2.0.0"
+  version  = "1.0.0"
   # source   = "github.com/StratusGrid/terraform-aws-lambda-event-handler-service-discovery-sync"
 
   name_prefix             = var.name_prefix
