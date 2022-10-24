@@ -26,7 +26,7 @@ variable "input_tags" {
 
 variable "ecs_cluster_arns" {
   description = "List of ecs cluster ARNS you want to listen to events from"
-  type        = list
+  type        = list(any)
 }
 
 variable "task_definition_matcher" {
