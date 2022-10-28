@@ -75,7 +75,7 @@ This is your gitignore, and contains a slew of default standards.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | Number of days for retention period of Lambda logs | `string` | `"30"` | no |
-| <a name="input_ecs_cluster_arns"></a> [ecs\_cluster\_arns](#input\_ecs\_cluster\_arns) | List of ecs cluster ARNS you want to listen to events from | `list(any)` | n/a | yes |
+| <a name="input_ecs_cluster_arns"></a> [ecs\_cluster\_arns](#input\_ecs\_cluster\_arns) | List of ecs cluster ARNS you want to listen to events from | `list(string)` | n/a | yes |
 | <a name="input_input_tags"></a> [input\_tags](#input\_input\_tags) | Map of tags to apply to resources | `map(string)` | <pre>{<br>  "Developer": "StratusGrid",<br>  "Provisioner": "Terraform"<br>}</pre> | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | String to prefix on object names | `string` | `""` | no |
 | <a name="input_name_suffix"></a> [name\_suffix](#input\_name\_suffix) | String to append to object names. This is optional, so start with dash if using | `string` | `""` | no |
