@@ -1,3 +1,7 @@
+locals {
+  kms_allowed_accounts = compact([data.aws_caller_identity.current.account_id])
+}
+
 #Event rule to direct events to the Lambda Function
 
 resource "aws_cloudwatch_event_rule" "event" {
@@ -6,18 +10,18 @@ resource "aws_cloudwatch_event_rule" "event" {
 
   event_pattern = jsonencode(
     {
-      "source": [
+      "source" : [
         "aws.ecs"
       ],
-      "detail-type": [
+      "detail-type" : [
         "ECS Task State Change"
       ],
-      "detail": {
-        "lastStatus": [
+      "detail" : {
+        "lastStatus" : [
           "STOPPED",
           "RUNNING"
         ],
-        "clusterArn": var.ecs_cluster_arns
+        "clusterArn" : var.ecs_cluster_arns
       }
     }
   )
@@ -25,41 +29,44 @@ resource "aws_cloudwatch_event_rule" "event" {
 
 #Target to direct event at function
 resource "aws_cloudwatch_event_target" "function_target" {
-  rule = aws_cloudwatch_event_rule.event.name
+  rule      = aws_cloudwatch_event_rule.event.name
   target_id = "${var.name_prefix}-${var.unique_name}-target${var.name_suffix}"
-  arn = aws_lambda_function.function.arn
+  arn       = aws_lambda_function.function.arn
 }
 
 #Permission to allow event trigger
 resource "aws_lambda_permission" "allow_cloudwatch_event_trigger" {
-  statement_id = "TrustCWEToInvokeMyLambdaFunction"
-  action = "lambda:InvokeFunction"
+  statement_id  = "TrustCWEToInvokeMyLambdaFunction"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.function.function_name
-  principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.event.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.event.arn
 }
 
 #Automatic packaging of code
 data "archive_file" "function_code" {
-  type = "zip"
-  source_dir = "${path.module}/function_code"
+  type        = "zip"
+  source_dir  = "${path.module}/function_code"
   output_path = "${path.module}/function_code_zipped/function_code.zip"
 }
 
 #Function to process event
 resource "aws_lambda_function" "function" {
-  filename = data.archive_file.function_code.output_path
+  filename         = data.archive_file.function_code.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_code.output_path)
-  function_name = "${var.name_prefix}-${var.unique_name}-function${var.name_suffix}"
-  role = aws_iam_role.function_role.arn
-  handler = "main.handler"
-  runtime = "python3.6"
-  timeout = "10"
+  function_name    = "${var.name_prefix}-${var.unique_name}-function${var.name_suffix}"
+  role             = aws_iam_role.function_role.arn
+  handler          = "main.handler"
+  runtime          = "python3.6"
+  timeout          = "10"
   environment {
     variables = {
       task_definition_matcher = var.task_definition_matcher
       service_id              = var.service_id
     }
+  }
+  tracing_config {
+    mode = "Active"
   }
   lifecycle {
     ignore_changes = [last_modified]
@@ -92,10 +99,10 @@ EOF
 
 #Default policy for Lambda to be executed and put logs in Cloudwatch
 resource "aws_iam_role_policy" "function_policy_default" {
-name = "${var.name_prefix}-${var.unique_name}-policy-default${var.name_suffix}"
-role = aws_iam_role.function_role.id
+  name = "${var.name_prefix}-${var.unique_name}-policy-default${var.name_suffix}"
+  role = aws_iam_role.function_role.id
 
-policy = <<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -126,10 +133,10 @@ EOF
 
 #Policy for additional Permissions for Lambda Execution
 resource "aws_iam_role_policy" "function_policy" {
-name = "${var.name_prefix}-${var.unique_name}-policy${var.name_suffix}"
-role = aws_iam_role.function_role.id
+  name = "${var.name_prefix}-${var.unique_name}-policy${var.name_suffix}"
+  role = aws_iam_role.function_role.id
 
-policy = <<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -150,10 +157,15 @@ EOF
 
 #Cloudwatch Log Group for Function
 resource "aws_cloudwatch_log_group" "log_group" {
-  name = "/aws/lambda/${aws_lambda_function.function.function_name}"
-
+  name              = "/aws/lambda/${aws_lambda_function.function.function_name}"
+  kms_key_id        = aws_kms_key.this
   retention_in_days = var.cloudwatch_log_retention_days
 
   tags = local.common_tags
 }
 
+resource "aws_kms_key" "this" {
+  description         = "Key used to encrypt this module"
+  policy              = data.aws_iam_policy_document.this.json
+  enable_key_rotation = true
+}

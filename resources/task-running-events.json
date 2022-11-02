@@ -26,10 +26,7 @@
     "overrides": {
       "containerOverrides": [
         {
-          "command": [
-            "command1",
-            "command2"
-          ],
+          "command": ["command1", "command2"],
           "environment": [
             {
               "name": "env1",
