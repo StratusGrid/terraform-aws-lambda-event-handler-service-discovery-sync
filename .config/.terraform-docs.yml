@@ -1,3 +1,5 @@
+header-from: ./.config/header.md
+
 version: ""
 
 formatter: markdown table
@@ -5,6 +7,8 @@ formatter: markdown table
 name: terraform-aws-lambda-event-handler-service-discovery-sync
 
 content: |-
+  {{ .Header }}
+
   # terraform-aws-lambda-event-handler-service-discovery-sync
   GitHub: [StratusGrid/terraform-aws-lambda-event-handler-service-discovery-sync](https://github.com/StratusGrid/terraform-aws-lambda-event-handler-service-discovery-sync)
   ## Example
@@ -52,6 +56,7 @@ content: |-
   Note, manual changes to the README will be overwritten when the documentation is updated. To update the documentation, run `terraform-docs -c .config/.terraform-docs.yml`
 sections:
   show:
+    - header
     - requirements
     - resources
     - inputs
